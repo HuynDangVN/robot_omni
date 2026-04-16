@@ -1,0 +1,47 @@
+ekf_filter_node:
+  ros__parameters:
+
+    use_sim_time: true
+
+    frequency: 50.0
+    sensor_timeout: 0.1
+
+    # output_topic: /odometry/filtere
+
+    two_d_mode: true                        # chay tren mat phang ngang thi set "True"
+    publish_tf: true
+
+    # Frames
+    odom_frame: odom
+    base_link_frame: base_link
+    world_frame: odom
+
+    # -------------------------
+    # Wheel odometry (mecanum)
+    # -------------------------
+    odom0: /mobile_base_controller/odometry
+
+    odom0_config: [true,  true,  false,     # x, y, z
+                   false, false, true,      # roll, pitch yaw
+                   true,  true,  false,     # Vx, Vy, Vz
+                   false, false, true,      # omegaX, omegaY, omega_Z
+                   false, false, false]     # aX, aY, aZ
+
+    odom0_differential: false               
+    odom0_relative: false                   
+
+    # -------------------------
+    # IMU
+    # -------------------------
+    imu0: /base_imu
+
+    imu0_config: [false, false, false,
+                  false, false, true,
+                  false, false, false,
+                  false, false, true,
+                  false, false, false]
+
+    imu0_differential: false                # neu imu co compass thi set "True"
+    imu0_relative: false                    # neu can co goc ban dau set "True"
+
+    imu0_remove_gravitational_acceleration: true    # loai bo gia toc trong truong

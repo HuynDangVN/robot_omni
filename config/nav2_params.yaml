@@ -1,0 +1,339 @@
+amcl:
+  ros__parameters:
+    use_sim_time: true
+    global_frame_id: map
+    odom_frame_id: odom
+    base_frame_id: base_link
+    scan_topic: /scan_front
+    robot_model_type: nav2_amcl::DifferentialMotionModel
+    alpha1: 0.5
+    alpha2: 0.4
+    alpha3: 0.2
+    alpha4: 0.2
+    alpha5: 0.2
+    beam_skip_distance: 0.5
+    beam_skip_error_threshold: 0.9
+    beam_skip_threshold: 0.3
+    do_beamskip: false
+    lambda_short: 0.1
+    laser_likelihood_max_dist: 2.0
+    laser_max_range: 100.0
+    laser_min_range: -1.0
+    laser_model_type: likelihood_field
+    max_beams: 60
+    max_particles: 2000
+    min_particles: 500
+    pf_err: 0.05
+    pf_z: 0.99
+    recovery_alpha_fast: 0.0
+    recovery_alpha_slow: 0.0
+    resample_interval: 1
+    save_pose_rate: 0.5
+    sigma_hit: 0.2
+    tf_broadcast: true
+    transform_tolerance: 1.0
+    update_min_a: 0.05
+    update_min_d: 0.1
+    z_hit: 0.5
+    z_max: 0.05
+    z_rand: 0.5
+    z_short: 0.05
+    set_initial_pose: true
+    always_reset_initial_pose: false
+    first_map_only: false
+    initial_pose:
+      x: 0.0
+      y: 0.0
+      z: 0.0
+      yaw: -1.5708
+
+bt_navigator:
+  ros__parameters:
+    use_sim_time: true
+    global_frame: map
+    robot_base_frame: base_link
+    odom_topic: /odometry/filtered
+    bt_loop_duration: 10
+    default_server_timeout: 20
+    wait_for_service_timeout: 1000
+    action_server_result_timeout: 900.0
+    plugin_lib_names:
+      - is_space_clear_plugin
+    navigators: ["navigate_to_pose", "navigate_through_poses"]
+    navigate_to_pose:
+      plugin: nav2_bt_navigator::NavigateToPoseNavigator
+    navigate_through_poses:
+      plugin: nav2_bt_navigator::NavigateThroughPosesNavigator
+
+controller_server:
+  ros__parameters:
+    use_sim_time: true
+    enable_stamped_cmd_vel: true
+    controller_frequency: 20.0
+    odom_topic: /odometry/filtered
+
+    controller_plugins: ["FollowPath"]
+    progress_checker_plugins: ["progress_checker"]
+    goal_checker_plugins: ["general_goal_checker"]
+
+    progress_checker:
+      plugin: nav2_controller::SimpleProgressChecker
+      required_movement_radius: 0.5
+      movement_time_allowance: 10.0
+
+    general_goal_checker:
+      stateful: True
+      plugin: nav2_controller::SimpleGoalChecker
+      xy_goal_tolerance: 0.25
+      yaw_goal_tolerance: 6.3   # 0.25
+
+    FollowPath:
+      plugin: "nav2_rotation_shim_controller::RotationShimController"
+      primary_controller: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+      
+      # --- CÁC THÔNG SỐ CỦA ROTATION SHIM ---
+      angular_dist_threshold: 0.43633    # Cứ lệch path > ? độ là bắt đứng lại xoay
+      forward_sampling_distance: 0.75     # Nhìn phía trước ? m để tính góc lệch
+      rotate_to_heading_angular_vel: 1.0 # Tốc độ xoay tại chỗ (rad/s)
+      max_angular_accel: 3.2             # Gia tốc xoay
+      simulate_ahead_time: 0.75           # Dự đoán va chạm khi đang xoay
+      
+      # --- CÁC THÔNG SỐ CỦA REGULATED PURE PURSUIT ---
+      desired_linear_vel: 0.5            # Tốc độ tiến thẳng mục tiêu (m/s)
+      
+      # Cấu hình "Tầm nhìn" (Lookahead)
+      use_velocity_scaled_lookahead: true # Tốc độ càng nhanh nhìn càng xa
+      lookahead_time: 1.5                # Thời gian quy ra khoảng cách nhìn xa
+      min_lookahead_dist: 0.2            # Khoảng cách nhìn gần nhất (m)
+      max_lookahead_dist: 0.9            # Khoảng cách nhìn xa nhất (m)
+      lookahead_dist: 0.6                # Mặc định nhìn xa (khi không scale theo tốc độ)
+      
+      # Cấu hình giảm tốc khi đến gần đích (Tiếp cận Goal)
+      min_approach_linear_velocity: 0.05 
+      approach_velocity_scaling_dist: 0.6 # Bắt đầu rà phanh khi cách đích ? m
+      
+      # Cấu hình an toàn & Né tường (Regulated Scaling)
+      use_collision_detection: true                       # Bật kiểm tra đâm đụng trên quỹ đạo tiến tới
+      max_allowed_time_to_collision_up_to_carrot: 3.0     # thoi gian du bao va cham 
+      use_regulated_linear_velocity_scaling: true         # Giảm tốc khi ở gần chướng ngại vật hoặc khi vào cua
+      cost_scaling_dist: 0.3                              # Bắt đầu giảm tốc nếu cách chướng ngại vật
+      cost_scaling_gain: 1.0
+      inflation_cost_scaling_factor: 1.5                  # do so vung lam phat
+      regulated_linear_vel_min: 0.1
+      regulated_linear_vel_max: 0.5
+      
+      # Các giới hạn động học khác
+      transform_tolerance: 0.1
+      # Tắt chức năng xoay của RPP vì Rotation Shim đã lam việc này
+      use_rotate_to_heading: false 
+      allow_reversing: false
+
+planner_server:
+  ros__parameters:
+    use_sim_time: true
+    expected_planner_frequency: 10.0
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: nav2_smac_planner::SmacPlanner2D
+      tolerance: 0.5
+      allow_unknown: false
+      downsample_costmap: false
+      downsampling_factor: 1
+
+smoother_server:
+  ros__parameters:
+    use_sim_time: true
+    smoother_plugins: ["simple_smoother"]
+    simple_smoother:
+      plugin: nav2_smoother::SimpleSmoother
+      tolerance: 1.0e-10
+      max_its: 1000
+      do_refinement: True
+
+behavior_server:
+  ros__parameters:
+    use_sim_time: true
+    enable_stamped_cmd_vel: true
+    local_costmap_topic: local_costmap/costmap_raw
+    global_costmap_topic: global_costmap/costmap_raw
+    local_footprint_topic: local_costmap/published_footprint
+    global_footprint_topic: global_costmap/published_footprint
+    cycle_frequency: 10.0
+    behavior_plugins: ["spin", "backup", "drive_on_heading", "wait"]
+    spin:
+      plugin: nav2_behaviors::Spin
+    backup:
+      plugin: nav2_behaviors::BackUp
+    drive_on_heading:
+      plugin: nav2_behaviors::DriveOnHeading
+    wait:
+      plugin: nav2_behaviors::Wait
+    local_frame: odom
+    global_frame: map
+    robot_base_frame: base_link
+    transform_tolerance: 0.1
+    simulate_ahead_time: 2.0
+    max_rotational_vel: 1.0
+    min_rotational_vel: 0.4
+    rotational_acc_lim: 3.2
+
+waypoint_follower:
+  ros__parameters:
+    use_sim_time: true
+    loop_rate: 20
+    stop_on_failure: false
+    action_server_result_timeout: 900.0
+    waypoint_task_executor_plugin: wait_at_waypoint
+    wait_at_waypoint:
+      plugin: nav2_waypoint_follower::WaitAtWaypoint
+      enabled: True
+      waypoint_pause_duration: 0
+
+velocity_smoother:
+  ros__parameters:
+    use_sim_time: true
+    enable_stamped_cmd_vel: true
+    smoothing_frequency: 20.0
+    scale_velocities: False
+    feedback: OPEN_LOOP
+    max_velocity: [0.5, 0.0, 2.0]
+    min_velocity: [-0.5, 0.0, -2.0]
+    max_accel: [2.5, 0.0, 3.2]
+    max_decel: [-2.5, 0.0, -3.2]
+    odom_topic: /odometry/filtered
+    odom_duration: 0.1
+    deadband_velocity: [0.0, 0.0, 0.0]
+    velocity_timeout: 1.0
+
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      use_sim_time: true        # Sử dụng thời gian giả lập (True nếu chạy Gazebo)
+      update_frequency: 15.0    # Tần số tính toán lại bản đồ (Hz)
+      publish_frequency: 2.0    # Tần số gửi dữ liệu để hiển thị lên RViz (Hz)
+      global_frame: odom        # Hệ tọa độ gốc cho bản đồ cục bộ (thường là odom)
+      robot_base_frame: base_link # Hệ tọa độ tâm của robot
+      rolling_window: true      # Bản đồ luôn di chuyển theo vị trí robot
+      width: 15                 # Chiều rộng khung nhìn cục bộ (mét)
+      height: 15                # Chiều dài khung nhìn cục bộ (mét)
+      resolution: 0.05          # Độ phân giải (5cm/pixel)
+      robot_radius: 0.25        # Bán kính thực tế của robot (mét)
+      
+      # Danh sách các lớp (layer) được sử dụng để xây dựng bản đồ
+      plugins: ["lidar_layer", "camera_layer", "inflation_layer"]
+      
+      lidar_layer:
+        plugin: nav2_costmap_2d::ObstacleLayer # Lớp xử lý vật cản từ Lidar
+        enabled: True
+        observation_sources: scan
+        scan:
+          topic: /scan_front        # Topic dữ liệu Lidar 2D
+          max_obstacle_height: 2.0  # Bỏ qua vật cản cao hơn 2m
+          clearing: True           # Tự động xóa vật cản nếu cảm biến không còn thấy (true)
+          marking: True             # Tự động vẽ vật cản khi cảm biến phát hiện
+          data_type: LaserScan      # Kiểu dữ liệu Lidar 2D
+          raytrace_max_range: 3.0   # Khoảng cách tối đa để xóa vật cản (mét)
+          raytrace_min_range: 0.1   # Khoảng cách tối thiểu để xóa vật cản
+          obstacle_max_range: 5.0   # Khoảng cách tối đa để vẽ vật cản mới
+          obstacle_min_range: 0.1   # Khoảng cách tối thiểu để vẽ vật cản mới
+          
+      camera_layer:
+        plugin: nav2_costmap_2d::ObstacleLayer # Lớp xử lý vật cản từ Camera sâu (3D)
+        enabled: True
+        observation_sources: camera_pointcloud
+        camera_pointcloud:
+          topic: /camera/points     # Topic dữ liệu PointCloud2 từ Camera
+          max_obstacle_height: 3.0  # Lấy vật cản cao tới 3m
+          min_obstacle_height: 0.15 # Bỏ qua nhiễu dưới mặt đất (<15cm)
+          clearing: True
+          marking: True
+          data_type: PointCloud2
+          raytrace_max_range: 12.0  # Tầm quét xóa vật cản của camera xa hơn Lidar
+          raytrace_min_range: 0.1
+          obstacle_max_range: 15.0   # Tầm vẽ vật cản của camera
+          obstacle_min_range: 0.1
+          
+      inflation_layer:
+        plugin: nav2_costmap_2d::InflationLayer # Lớp tạo vùng đệm an toàn quanh vật cản
+        cost_scaling_factor: 3.0    # Hệ số giảm độ nguy hiểm
+        inflation_radius: 0.7      # Bán kính vùng đệm (mét) - Robot sẽ tránh vùng này
+      always_send_full_costmap: True
+
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      use_sim_time: true
+      update_frequency: 1.0     # Bản đồ toàn cục cập nhật chậm hơn (giảm tải CPU)
+      publish_frequency: 1.0
+      global_frame: map         # Hệ tọa độ gốc toàn cục là bản đồ tĩnh (map)
+      robot_base_frame: base_link
+      robot_radius: 0.25
+      resolution: 0.05
+      track_unknown_space: true # Theo dõi cả những vùng chưa khám phá (vùng xám)
+      
+      # Thêm static_layer để sử dụng bản đồ đã lưu từ map_server
+      plugins: ["static_layer", "lidar_layer", "camera_layer", "inflation_layer"]
+      
+      static_layer:
+        plugin: nav2_costmap_2d::StaticLayer    # Lớp bản đồ tĩnh từ file .yaml/.pgm
+        map_subscribe_transient_local: True     # Đảm bảo nhận được bản đồ kể cả khi load muộn
+        
+      lidar_layer:
+        plugin: nav2_costmap_2d::ObstacleLayer  # Cập nhật vật cản động vào bản đồ tĩnh
+        enabled: True
+        observation_sources: scan
+        scan:
+          topic: /scan_front
+          max_obstacle_height: 2.0
+          clearing: True
+          marking: True
+          data_type: LaserScan
+          raytrace_max_range: 3.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 2.0   # Ở bản đồ global, chỉ tin vật cản gần 
+          obstacle_min_range: 0.0
+          
+      camera_layer:
+        plugin: nav2_costmap_2d::ObstacleLayer
+        enabled: True
+        observation_sources: camera_pointcloud
+        camera_pointcloud:
+          topic: /camera/points
+          max_obstacle_height: 2.0
+          min_obstacle_height: 0.05
+          clearing: True
+          marking: True
+          data_type: PointCloud2
+          raytrace_max_range: 10.0
+          raytrace_min_range: 0.1
+          obstacle_max_range: 8.0
+          obstacle_min_range: 0.1
+          
+      inflation_layer:
+        plugin: nav2_costmap_2d::InflationLayer
+        cost_scaling_factor: 4.0     # Hệ số dốc nguy hiểm cho bản đồ toàn cục
+        inflation_radius: 0.45       # Bán kính an toàn rộng hơn một chút
+      always_send_full_costmap: True
+
+map_server:
+  ros__parameters:
+    use_sim_time: true
+
+lifecycle_manager_localization:
+  ros__parameters:
+    use_sim_time: true
+    autostart: true
+    node_names: ["map_server", "amcl"]
+
+lifecycle_manager_navigation:
+  ros__parameters:
+    use_sim_time: true
+    autostart: true
+    node_names:
+      - "controller_server"
+      - "planner_server"
+      - "smoother_server"
+      - "behavior_server"
+      - "bt_navigator"
+      - "waypoint_follower"
+      - "velocity_smoother"

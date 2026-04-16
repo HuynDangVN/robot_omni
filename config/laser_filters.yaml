@@ -1,0 +1,10 @@
+scan_front_filter:
+  ros__parameters:
+    filter1:
+      name: speckle_filter
+      type: laser_filters/LaserScanSpeckleFilter
+      params:
+        filter_type: 0            # 0: Dựa trên khoảng cách (Distance)
+        max_range: 3.0            # Khoảng cách tối đa Lidar hoạt động
+        max_range_difference: 0.2 # Ngưỡng chênh lệch khoảng cách giữa các tia
+        filter_window: 3          # Số tia lân cận để kiểm tra
