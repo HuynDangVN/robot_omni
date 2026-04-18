@@ -374,49 +374,71 @@ class WaypointGUI:
         points = [{'x': self.ros_node.current_x, 'y': self.ros_node.current_y}] + [wp['position'] for wp in target_wps]
         n = len(points)
         
-        # B1: TÍNH TOÁN KHOẢNG CÁCH EUCLIDEAN (Tốc độ ánh sáng ⚡)
-        dist_matrix = [[0.0]*n for _ in range(n)]
-        for i in range(n):
-            for j in range(n):
-                dist_matrix[i][j] = math.hypot(points[i]['x'] - points[j]['x'], points[i]['y'] - points[j]['y'])
+        # Hàm tính khoảng cách để code gọn gàng hơn
+        def dist(i, j):
+            return math.hypot(points[i]['x'] - points[j]['x'], points[i]['y'] - points[j]['y'])
 
-        # B2: VÉT CẠN TÌM THỨ TỰ TỐI ƯU
-        best_route = []
-        if n > 2:
+        # --- BƯỚC 1: THUẬT TOÁN NEAREST NEIGHBOR (Tạo lộ trình thô nhanh chóng) ---
+        unvisited = list(range(1, n)) 
+        current_node = 0              
+        route = [0] # Bắt đầu từ Robot (điểm 0)
+
+        while unvisited:
+            next_node = None
             min_dist = float('inf')
             
-            # Xét tất cả các trường hợp lộ trình có thể xảy ra
-            for perm in itertools.permutations(range(1, n)):
-                current_dist = dist_matrix[0][perm[0]]
-                for i in range(len(perm) - 1):
-                    current_dist += dist_matrix[perm[i]][perm[i+1]]
-                
-                if current_dist < min_dist:
-                    min_dist = current_dist
-                    best_route = list(perm)
-        else:
-            best_route = [1] if n == 2 else []
+            for candidate in unvisited:
+                d = dist(current_node, candidate)
+                if d < min_dist:
+                    min_dist = d
+                    next_node = candidate
+            
+            route.append(next_node)
+            unvisited.remove(next_node)
+            current_node = next_node
 
-        # B3: CẬP NHẬT LẠI DANH SÁCH & VẼ ĐƯỜNG THẲNG
+        # --- BƯỚC 2: THUẬT TOÁN 2-OPT (Tự động gỡ chéo lộ trình) ---
+        improvement = True
+        while improvement:
+            improvement = False
+            # Duyệt qua các cặp cạnh không liền kề nhau
+            for i in range(len(route) - 2):
+                for j in range(i + 2, len(route) - 1):
+                    # Khoảng cách hiện tại của 2 cạnh
+                    d_current = dist(route[i], route[i+1]) + dist(route[j], route[j+1])
+                    # Khoảng cách nếu đổi chéo
+                    d_new = dist(route[i], route[j]) + dist(route[i+1], route[j+1])
+                    
+                    # Nếu đổi chéo làm lộ trình ngắn hơn (hết bị cắt chéo)
+                    if d_new < d_current:
+                        # Đảo ngược đoạn đường nằm giữa
+                        route[i+1:j+1] = reversed(route[i+1:j+1])
+                        improvement = True
+                        break # Bắt đầu dò lại từ đầu sau khi cải thiện
+                if improvement:
+                    break
+
+        # Loại bỏ vị trí robot (điểm 0) để lấy danh sách target thuần túy
+        best_route = route[1:]
+
+        # --- BƯỚC 3: CẬP NHẬT LẠI DANH SÁCH & VẼ ĐƯỜNG ---
         reordered_targets = []
         full_planned_path = [{'x': points[0]['x'], 'y': points[0]['y']}] 
         
         for next_node in best_route:
-            # Chỉ lưu 1 đường thẳng nối 2 điểm
             full_planned_path.append({'x': points[next_node]['x'], 'y': points[next_node]['y']})
-            
-            # Sắp xếp lại thứ tự Listbox
             actual_wp = target_wps[next_node - 1]
             reordered_targets.append(actual_wp)
             
         self.ga_waypoints = reordered_targets 
         self.planned_lines = full_planned_path
 
+        # Cập nhật UI an toàn
         self.master.after(0, self.update_ga_listbox)
-        self.master.after(0, lambda: self.update_status("Trạng thái: Tối ưu hoàn tất! Sẵn sàng chạy.", "green"))
+        self.master.after(0, lambda: self.update_status("Trạng thái: Tối ưu 2-Opt hoàn tất! Hết chéo đường.", "green"))
         
         def ask_ready():
-            if messagebox.askyesno("Nav2 - Sẵn sàng", f"Đã tối ưu xong lộ trình cho {len(self.ga_waypoints)} điểm Target!\n\nBạn có muốn bắt đầu di chuyển Robot ngay không?"):
+            if messagebox.askyesno("Nav2 - Sẵn sàng", f"Đã gỡ chéo lộ trình cho {len(self.ga_waypoints)} điểm Target!\n\nBạn có muốn bắt đầu di chuyển Robot ngay không?"):
                 self.send_route_to_nav2()
         self.master.after(0, ask_ready)
 
