@@ -16,7 +16,7 @@ def generate_launch_description():
 
     urdf_file = os.path.join(pkg, 'urdf', 'omni_base.urdf')
     # world_file = os.path.join(pkg, 'worlds', 'hospital_aws.world')
-    world_file = os.path.join(pkg, 'worlds', 'hospital_full.world')
+    world_file = os.path.join(pkg, 'worlds', 'hospital_full_exam.world')
     bridge_config = os.path.join(pkg, 'config', 'bridge_config.yaml')
     controller_config = os.path.join(pkg, 'config', 'configuration.yaml')
     ekf_config = os.path.join(pkg, 'config', 'ekf.yaml')
