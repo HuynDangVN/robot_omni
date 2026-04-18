@@ -51,8 +51,8 @@
     </hardware>
     <joint name="wheel_front_right_joint">
       <command_interface name="velocity">
-        <param name="min">-1</param>
-        <param name="max">1</param>
+        <param name="min">-2</param>
+        <param name="max">2</param>
       </command_interface>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
@@ -66,8 +66,8 @@
     </transmission>
     <joint name="wheel_front_left_joint">
       <command_interface name="velocity">
-        <param name="min">-1</param>
-        <param name="max">1</param>
+        <param name="min">-2</param>
+        <param name="max">2</param>
       </command_interface>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
@@ -81,8 +81,8 @@
     </transmission>
     <joint name="wheel_rear_right_joint">
       <command_interface name="velocity">
-        <param name="min">-1</param>
-        <param name="max">1</param>
+        <param name="min">-2</param>
+        <param name="max">2</param>
       </command_interface>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
@@ -96,8 +96,8 @@
     </transmission>
     <joint name="wheel_rear_left_joint">
       <command_interface name="velocity">
-        <param name="min">-1</param>
-        <param name="max">1</param>
+        <param name="min">-2</param>
+        <param name="max">2</param>
       </command_interface>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
@@ -459,7 +459,7 @@
     <kp>1000000.0</kp>
     <kd>1000.0</kd>
     <mu1>1.0</mu1>
-    <mu2>0.1</mu2>
+    <mu2>0.15</mu2>
     <fdir1>1 0 0</fdir1>
     <maxVel>1.0</maxVel>
     <minDepth>0.00</minDepth>
@@ -530,7 +530,7 @@
     <kp>1000000.0</kp>
     <kd>1000.0</kd>
     <mu1>1.0</mu1>
-    <mu2>0.1</mu2>
+    <mu2>0.15</mu2>
     <fdir1>1 0 0</fdir1>
     <maxVel>1.0</maxVel>
     <minDepth>0.00</minDepth>
@@ -601,7 +601,7 @@
     <kp>1000000.0</kp>
     <kd>1000.0</kd>
     <mu1>1.0</mu1>
-    <mu2>0.1</mu2>
+    <mu2>0.15</mu2>
     <fdir1>1 0 0</fdir1>
     <maxVel>1.0</maxVel>
     <minDepth>0.00</minDepth>
@@ -672,7 +672,7 @@
     <kp>1000000.0</kp>
     <kd>1000.0</kd>
     <mu1>1.0</mu1>
-    <mu2>0.1</mu2>
+    <mu2>0.15</mu2>
     <fdir1>1 0 0</fdir1>
     <maxVel>1.0</maxVel>
     <minDepth>0.00</minDepth>
