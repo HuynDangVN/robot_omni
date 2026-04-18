@@ -92,7 +92,7 @@ controller_server:
       primary_controller: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
       
       # --- CÁC THÔNG SỐ CỦA ROTATION SHIM ---
-      angular_dist_threshold: 0.43633    # Cứ lệch path > ? độ là bắt đứng lại xoay
+      angular_dist_threshold: 0.523599    # Cứ lệch path > ? độ là bắt đứng lại xoay
       forward_sampling_distance: 0.75     # Nhìn phía trước ? m để tính góc lệch
       rotate_to_heading_angular_vel: 1.0 # Tốc độ xoay tại chỗ (rad/s)
       max_angular_accel: 3.2             # Gia tốc xoay
