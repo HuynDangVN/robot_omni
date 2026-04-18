@@ -35,18 +35,18 @@ mobile_base_controller:
     linear:
       x:
         has_velocity_limits: true
-        max_velocity: 1.0
+        max_velocity: 2.0
         has_acceleration_limits: true
-        max_acceleration: 2.0
+        max_acceleration: 1.0
       y:
         has_velocity_limits: true
-        max_velocity: 1.0      # Quan trọng: Cho phép trượt ngang tối đa 1.0 m/s
+        max_velocity: 0.0     
         has_acceleration_limits: true
-        max_acceleration: 2.0
+        max_acceleration: 0.0
     angular:
       z:
         has_velocity_limits: true
-        max_velocity: 2.0      # Quan trọng: Cho phép xoay tối đa 2.0 rad/s
+        max_velocity: 3.0   
         has_acceleration_limits: true
         max_acceleration: 3.0
     
